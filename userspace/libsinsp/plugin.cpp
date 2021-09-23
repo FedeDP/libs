@@ -633,12 +633,12 @@ bool sinsp_plugin::resolve_dylib_symbols(void *handle, std::string &errstr)
 		string json(sfields);
 		SINSP_DEBUG("Parsing Fields JSON=%s", json.c_str());
 		Json::Value root;
-		if(Json::Reader().parse(json, root) == false || root.type() != Json::arrayValue)
+		if(!Json::Reader().parse(json, root) || root.type() != Json::arrayValue)
 		{
 			throw sinsp_exception(string("error in plugin ") + m_name + ": get_fields returned an invalid JSON");
 		}
 
-		filtercheck_field_info *fields = new filtercheck_field_info[root.size()];
+		auto fields = new(nothrow) filtercheck_field_info[root.size()];
 		if(fields == NULL)
 		{
 			throw sinsp_exception(string("error in plugin ") + m_name + ": could not allocate memory");
@@ -655,19 +655,23 @@ bool sinsp_plugin::resolve_dylib_symbols(void *handle, std::string &errstr)
 
 			const Json::Value &jvtype = root[j]["type"];
 			string ftype = jvtype.asString();
-			if(ftype == "")
+			if(ftype.empty())
 			{
 				throw sinsp_exception(string("error in plugin ") + m_name + ": field JSON entry has no type");
 			}
 			const Json::Value &jvname = root[j]["name"];
 			string fname = jvname.asString();
-			if(fname == "")
+			if(fname.empty())
 			{
 				throw sinsp_exception(string("error in plugin ") + m_name + ": field JSON entry has no name");
 			}
+			if(fname.rfind(m_name + ".", 0) != 0)
+			{
+				throw sinsp_exception(string("error in plugin ") + m_name + ": field JSON entry name does not start with plugin name");
+			}
 			const Json::Value &jvdesc = root[j]["desc"];
 			string fdesc = jvdesc.asString();
-			if(fdesc == "")
+			if(fdesc.empty())
 			{
 				throw sinsp_exception(string("error in plugin ") + m_name + ": field JSON entry has no desc");
 			}
@@ -704,7 +708,7 @@ bool sinsp_plugin::resolve_dylib_symbols(void *handle, std::string &errstr)
 					throw sinsp_exception(string("error in plugin ") + m_name + ": field " + fname + " argRequired property is not boolean ");
 				}
 
-				if (jvargRequired.asBool() == true)
+				if (jvargRequired.asBool())
 				{
 					tf.m_flags = filtercheck_field_flags::EPF_REQUIRES_ARGUMENT;
 				}
