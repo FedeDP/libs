@@ -139,10 +139,10 @@ void sinsp_logger::log(std::string msg, const severity sev)
 {
 	sinsp_logger_callback cb = nullptr;
 
-	if(sev > m_sev)
+	/*if(sev > m_sev)
 	{
 		return;
-	}
+	}*/
 
 	if((m_flags & sinsp_logger::OT_NOTS) == 0)
 	{

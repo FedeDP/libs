@@ -392,6 +392,8 @@ public:
 				}
 				//g_logger.log("Socket handler (" + m_id + ") received=" + std::to_string(rec) +
 				//			 "\n\n" + data + "\n\n", sinsp_logger::SEV_TRACE);
+			} else {
+				g_logger.log("ioret: " + to_string(ioret) + " count: " + to_string(count) + " errno: " + to_string(errno), sinsp_logger::SEV_TRACE);
 			}
 
 			// To prevent reads from entirely stalling (like in gigantic k8s environments), 
