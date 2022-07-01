@@ -1,0 +1,99 @@
+name: CI Build
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  build-image-builder:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        
+      - name: Set up Docker Buildx
+ì        uses: docker/setup-buildx-action@v2
+      
+      - uses: satackey/action-docker-layer-caching@v0.0.11
+        # Ignore the failure of a step and avoid terminating the job.
+        continue-on-error: true
+        
+      - name: Build the Docker image
+        run: docker buildx build --platform amd64,arm64 . --file docker/buider.Dockerfile --tag libs_builder:$(date +%s)
+      
+      - name: Load the Docker image
+        run: docker load libs_builder:$(date +%s)
+
+  build-libs:
+    runs-on: ubuntu-latest
+    container:
+      image: libs_builder:$(date +%s)
+    steps:
+      - name: Link libs repo to /workspace
+        run: |
+          mkdir -p /workspace
+          ln -s "$GITHUB_WORKSPACE/libs" /workspace
+  
+      - name: Build and test
+        run: /build.sh -DBUILD_BPF=On -DUSE_BUNDLED_DEPS=False
+        
+  build-libs-bundled-deps:
+    runs-on: ubuntu-latest
+    container:
+      image: libs_builder:$(date +%s)
+    steps:
+      - name: Link libs repo to /workspace
+        run: |
+          mkdir -p /workspace
+          ln -s "$GITHUB_WORKSPACE/libs" /workspace
+  
+      - name: Build and test
+        run: /build.sh -DBUILD_BPF=On -DUSE_BUNDLED_DEPS=True
+        
+  build-libs-with-chisels:
+    runs-on: ubuntu-latest
+    container:
+      image: libs_builder:$(date +%s)
+    steps:
+      - name: Link libs repo to /workspace
+        run: |
+          mkdir -p /workspace
+          ln -s "$GITHUB_WORKSPACE/libs" /workspace
+  
+      - name: Build and test
+        run: /build.sh -DBUILD_BPF=On -DWITH_CHISEL=True
+        
+  build-libs-minimal:
+    runs-on: ubuntu-latest
+    container:
+      image: libs_builder:$(date +%s)
+    steps:
+      - name: Link libs repo to /workspace
+        run: |
+          mkdir -p /workspace
+          ln -s "$GITHUB_WORKSPACE/libs" /workspace
+  
+      - name: Build and test
+        run: /build.sh -DMINIMAL_BUILD=True
+        
+  build-libs-arm64:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: uraimo/run-on-arch-action@v2
+        name: Run aarch64 build
+        with:
+          arch: aarch64
+          distro: buster
+          githubToken: ${{ github.token }}
+
+          # Set an output parameter `uname` for use in subsequent steps
+          install: |
+            apt update -q -y
+            apt install -q -y docker
+            
+          run: |
+            docker run -ti --rm -v $GITHUB_WORKSPACE/libs:/workspace libs_builder:$(date +%s) -DBUILD_BPF=On -DUSE_BUNDLED_DEPS=False
