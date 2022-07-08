@@ -178,7 +178,7 @@ jobs:
       - name: Configure
         run: |
           mkdir -p build
-          cd build && cmake -DUSE_BUNDLED_DEPS=true ..
+          cd build && cmake -DCREATE_TEST_TARGETS=OFF ..
   
       - name: Build
-        run: cd build && cmake --build .  
+        run: cd build && cmake --build .
