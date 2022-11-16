@@ -5,7 +5,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,10 +19,10 @@ include_directories(..)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/..)
 
 set(LIBSCAP_UNIT_TESTS_SOURCES
-    scap_event.ut.cpp
+	scap_event.ut.cpp
 )
 
-if (BUILD_LIBSCAP_GVISOR)
+if(BUILD_LIBSCAP_GVISOR AND NOT EMSCRIPTEN_BUILD)
 	list(APPEND LIBSCAP_UNIT_TESTS_SOURCES scap_gvisor_parsers.ut.cpp)
 	include_directories(../engine/gvisor)
 	include_directories(${CMAKE_CURRENT_BINARY_DIR}/../engine/gvisor)
@@ -39,7 +39,7 @@ target_link_libraries(unit-test-libscap
 	scap
 )
 
-if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
+if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
 	target_link_libraries(unit-test-libscap
 		gcov
 	)

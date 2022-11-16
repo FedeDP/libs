@@ -19,13 +19,17 @@ option(USE_BUNDLED_DEPS "Enable bundled dependencies instead of using the system
 
 option(BUILD_LIBSCAP_MODERN_BPF "Enable modern bpf probe" OFF)
 
-if(NOT MSVC)
-	if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+if(EMSCRIPTEN_BUILD)
+	add_definitions(-DEMSCRIPTEN_BUILD)
+else()
+	if(NOT MSVC)
+		if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+			add_definitions(-DHAS_CAPTURE)
+		endif()
+	else() # MSVC
+		# todo(leogr): this should be removed - double check
 		add_definitions(-DHAS_CAPTURE)
 	endif()
-else() # MSVC
-	# todo(leogr): this should be removed - double check
-	add_definitions(-DHAS_CAPTURE)
 endif()
 
 include(ExternalProject)
@@ -60,7 +64,7 @@ if (DEFINED SCAP_BPF_PROGS_MAX)
 endif()
 
 if(CYGWIN)
-include_directories("${WIN_HAL_INCLUDE}")
+	include_directories("${WIN_HAL_INCLUDE}")
 endif()
 
 list(APPEND targetfiles
@@ -72,8 +76,8 @@ list(APPEND targetfiles
 	scap_userlist.c)
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR}) # temporary
-    include_directories(${PROJECT_BINARY_DIR}/driver/src)
+	include_directories(${CMAKE_CURRENT_SOURCE_DIR}) # temporary
+	include_directories(${PROJECT_BINARY_DIR}/driver/src)
 endif()
 
 if(CYGWIN OR WIN32)
@@ -99,17 +103,17 @@ elseif (CYGWIN)
 endif()
 
 if(NOT MINIMAL_BUILD)
-target_link_libraries(scap
-	"${ZLIB_LIB}")
+	target_link_libraries(scap
+		"${ZLIB_LIB}")
 endif()
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
-    option(BUILD_LIBSCAP_EXAMPLES "Build libscap examples" ON)
+	option(BUILD_LIBSCAP_EXAMPLES "Build libscap examples" ON)
 
     if (BUILD_LIBSCAP_EXAMPLES)
-        add_subdirectory(examples/01-open)
-        add_subdirectory(examples/02-validatebuffer)
-    endif()
+		add_subdirectory(examples/01-open)
+		add_subdirectory(examples/02-validatebuffer)
+	endif()
 
 	include(FindMakedev)
 endif()
@@ -140,12 +144,12 @@ endif()
 target_link_libraries(scap scap_platform)
 
 add_library(scap_event_schema
-		scap_event.c
-		syscall_info_table.c
-		../../driver/dynamic_params_table.c
-		../../driver/event_table.c
-		../../driver/flags_table.c
-		../../driver/tp_table.c)
+	scap_event.c
+	syscall_info_table.c
+	../../driver/dynamic_params_table.c
+	../../driver/event_table.c
+	../../driver/flags_table.c
+	../../driver/tp_table.c)
 
 if(USE_BUNDLED_ZLIB AND NOT MINIMAL_BUILD)
 	add_dependencies(scap_event_schema zlib)
@@ -177,10 +181,11 @@ add_definitions(-DHAS_ENGINE_NOOP)
 add_subdirectory(engine/noop)
 # don't link the noop engine to libscap directly,
 # it's a helper library for other engines (it's completely useless on its own)
-
-add_definitions(-DHAS_ENGINE_NODRIVER)
-add_subdirectory(engine/nodriver)
-target_link_libraries(scap scap_engine_nodriver)
+if (NOT EMSCRIPTEN_BUILD)
+	add_definitions(-DHAS_ENGINE_NODRIVER)
+	add_subdirectory(engine/nodriver)
+	target_link_libraries(scap scap_engine_nodriver)
+endif()
 
 add_definitions(-DHAS_ENGINE_SAVEFILE)
 add_subdirectory(engine/savefile)

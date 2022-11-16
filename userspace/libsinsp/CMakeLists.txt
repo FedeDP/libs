@@ -21,15 +21,19 @@ include_directories(./include)
 
 option(USE_BUNDLED_DEPS "Enable bundled dependencies instead of using the system ones" ON)
 
-if(NOT MSVC)
-	if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+if(EMSCRIPTEN_BUILD)
+	add_definitions(-DEMSCRIPTEN_BUILD)
+else()
+	if(NOT MSVC)
+		if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+			add_definitions(-DHAS_CAPTURE)
+		endif()
+		add_definitions(-DHAVE_PWD_H)
+		add_definitions(-DHAVE_GRP_H)
+	else() # MSVC
+		# todo(leogr): this should be removed - double check
 		add_definitions(-DHAS_CAPTURE)
 	endif()
-	add_definitions(-DHAVE_PWD_H)
-	add_definitions(-DHAVE_GRP_H)
-else() # MSVC
-	# todo(leogr): this should be removed - double check
-	add_definitions(-DHAS_CAPTURE)
 endif()
 
 if(NOT DEFINED CHISEL_TOOL_LIBRARY_NAME)
