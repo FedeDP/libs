@@ -77,7 +77,7 @@ scap_t* scap_open_live_int(char *error, int32_t *rc, scap_open_args* oargs)
 }
 #endif
 
-#if !defined(HAS_CAPTURE) || defined(CYGWING_AGENT)
+#if defined(HAS_ENGINE_UDIG) && !defined(HAS_CAPTURE) || defined(CYGWING_AGENT)
 scap_t* scap_open_udig_int(char *error, int32_t *rc,
 			   proc_entry_callback proc_callback,
 			   void* proc_callback_context,
@@ -90,7 +90,7 @@ scap_t* scap_open_udig_int(char *error, int32_t *rc,
 }
 #else
 
-#ifndef _WIN32
+#if !defined(_WIN32) && (defined(HAS_ENGINE_KMOD) || defined(HAS_ENGINE_BPF) || defined(HAS_ENGINE_MODERN_BPF))
 scap_t* scap_open_live_int(char *error, int32_t *rc, scap_open_args* oargs)
 {
 	char filename[SCAP_MAX_PATH_SIZE] = {0};
@@ -259,6 +259,7 @@ scap_t* scap_open_live_int(char *error, int32_t *rc, scap_open_args* oargs)
 
 #endif // _WIN32
 
+#ifdef HAS_ENGINE_UDIG
 scap_t* scap_open_udig_int(char *error, int32_t *rc,
 			   proc_entry_callback proc_callback,
 			   void* proc_callback_context,
@@ -404,7 +405,9 @@ scap_t* scap_open_udig_int(char *error, int32_t *rc,
 
 	return handle;
 }
+#endif
 #endif // !defined(HAS_CAPTURE) || defined(CYGWING_AGENT)
+
 
 #ifdef HAS_ENGINE_TEST_INPUT
 scap_t* scap_open_test_input_int(char *error, int32_t *rc, scap_open_args *oargs)
@@ -635,6 +638,7 @@ scap_t* scap_open_offline_int(scap_open_args* oargs, int* rc, char* error)
 	return handle;
 }
 
+#ifdef HAS_ENGINE_NODRIVER
 scap_t* scap_open_nodriver_int(char *error, int32_t *rc,
 			       proc_entry_callback proc_callback,
 			       void* proc_callback_context,
@@ -754,7 +758,9 @@ scap_t* scap_open_nodriver_int(char *error, int32_t *rc,
 	return handle;
 #endif // HAS_CAPTURE
 }
+#endif // HAS_ENGINE_NODRIVER
 
+#ifdef HAS_ENGINE_SOURCE_PLUGIN
 scap_t* scap_open_plugin_int(char *error, int32_t *rc, scap_open_args* oargs)
 {
 	scap_t* handle = NULL;
@@ -817,6 +823,7 @@ scap_t* scap_open_plugin_int(char *error, int32_t *rc, scap_open_args* oargs)
 
 	return handle;
 }
+#endif
 
 scap_t* scap_open(scap_open_args* oargs, char *error, int32_t *rc)
 {
@@ -834,41 +841,55 @@ scap_t* scap_open(scap_open_args* oargs, char *error, int32_t *rc)
 	 * with an internal switch that selects the right vtable! For the moment
 	 * let's keep different functions.
 	 */
+#ifdef HAS_ENGINE_SAVEFILE
 	if(strcmp(engine_name, SAVEFILE_ENGINE) == 0)
 	{
 		return scap_open_offline_int(oargs, rc, error);
 	}
-	else if(strcmp(engine_name, UDIG_ENGINE) == 0)
+#endif
+#ifdef HAS_ENGINE_UDIG
+	if(strcmp(engine_name, UDIG_ENGINE) == 0)
 	{
 		return scap_open_udig_int(error, rc, oargs->proc_callback,
 								oargs->proc_callback_context,
 								oargs->import_users,
 								oargs->suppressed_comms);
 	}
-	else if(strcmp(engine_name, GVISOR_ENGINE) == 0)
+#endif
+#ifdef HAS_ENGINE_GVISOR
+	if(strcmp(engine_name, GVISOR_ENGINE) == 0)
 	{
 		return scap_open_gvisor_int(error, rc, oargs);
 	}
-	else if(strcmp(engine_name, TEST_INPUT_ENGINE) == 0)
+#endif
+#ifdef HAS_ENGINE_TEST_INPUT
+	if(strcmp(engine_name, TEST_INPUT_ENGINE) == 0)
 	{
 		return scap_open_test_input_int(error, rc, oargs);
 	}
-	else if(strcmp(engine_name, KMOD_ENGINE) == 0 ||
+#endif
+#ifdef HAS_ENGINE_KMOD
+	if(strcmp(engine_name, KMOD_ENGINE) == 0 ||
 			strcmp(engine_name, BPF_ENGINE) == 0 ||
 			strcmp(engine_name, MODERN_BPF_ENGINE) == 0)
 	{
 		return scap_open_live_int(error, rc, oargs);
 	}
-	else if(strcmp(engine_name, NODRIVER_ENGINE) == 0)
+#endif
+#ifdef HAS_ENGINE_NODRIVER
+	if(strcmp(engine_name, NODRIVER_ENGINE) == 0)
 	{
 		return scap_open_nodriver_int(error, rc, oargs->proc_callback,
 					      oargs->proc_callback_context,
 					      oargs->import_users);
 	}
-	else if(strcmp(engine_name, SOURCE_PLUGIN_ENGINE) == 0)
+#endif
+#ifdef HAS_ENGINE_SOURCE_PLUGIN
+	if(strcmp(engine_name, SOURCE_PLUGIN_ENGINE) == 0)
 	{
 		return scap_open_plugin_int(error, rc, oargs);
 	}
+#endif
 
 	snprintf(error, SCAP_LASTERR_SIZE, "incorrect engine '%s'", engine_name);
 	*rc = SCAP_FAILURE;
