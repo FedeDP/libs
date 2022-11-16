@@ -44,10 +44,12 @@ limitations under the License.
 #include "capture_stats_source.h"
 #include "container_engine/wmi_handle_source.h"
 
+#ifndef EMSCRIPTEN_BUILD
 #ifdef _WIN32
 #pragma warning(disable: 4251 4200 4221 4190)
 #else
 #include "tbb/concurrent_queue.h"
+#endif
 #endif
 
 #include "sinsp_inet.h"
@@ -1410,7 +1412,7 @@ public:
 	// 	information, read from sinsp::next().
 	// *	user added/removed events
 	// * 	group added/removed events
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(EMSCRIPTEN_BUILD)
 	tbb::concurrent_queue<shared_ptr<sinsp_evt>> m_pending_state_evts;
 #endif
 

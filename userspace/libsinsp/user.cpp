@@ -581,7 +581,7 @@ void sinsp_usergroup_manager::notify_user_changed(const scap_userinfo *user, con
 
 	std::shared_ptr<sinsp_evt> cevt(evt);
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(EMSCRIPTEN_BUILD)
 	m_inspector->m_pending_state_evts.push(cevt);
 #endif
 }
@@ -609,7 +609,7 @@ void sinsp_usergroup_manager::notify_group_changed(const scap_groupinfo *group, 
 
 	std::shared_ptr<sinsp_evt> cevt(evt);
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(EMSCRIPTEN_BUILD)
 	m_inspector->m_pending_state_evts.push(cevt);
 #endif
 }
