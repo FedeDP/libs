@@ -66,7 +66,7 @@ if(NOT WIN32 AND NOT APPLE)
 	include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 endif()
 
-if(NOT WIN32)
+if(NOT WIN32 AND NOT EMSCRIPTEN_BUILD)
 	include(tbb)
 endif()
 

@@ -36,8 +36,14 @@ project(falcosecurity-libs)
 
 option(USE_BUNDLED_DEPS "Enable bundled dependencies instead of using the system ones" ON)
 option(MINIMAL_BUILD "Produce a minimal build with only the essential features (no eBPF probe driver, no kubernetes, no mesos, no marathon and no container metadata)" OFF)
+option(EMSCRIPTEN_BUILD "Produce a minimal build without any engine aside from savefile")
 option(MUSL_OPTIMIZED_BUILD "Enable if you want a musl optimized build" OFF)
 option(USE_BUNDLED_DRIVER "Use the driver/ subdirectory in the build process (only available in Linux)" ON)
+
+if(EMSCRIPTEN_BUILD)
+	set(MINIMAL_BUILD ON CACHE BOOL "" FORCE)
+	set(USE_BUNDLED_DEPS ON CACHE BOOL "" FORCE)
+endif()
 
 include(GNUInstallDirs)
 
@@ -76,6 +82,9 @@ include(CompilerFlags)
 option(WITH_CHISEL "Include chisel implementation" OFF)
 
 option(CREATE_TEST_TARGETS "Enable make-targets for unit testing" ON)
+if(EMSCRIPTEN_BUILD)
+	set(CREATE_TEST_TARGETS OFF CACHE BOOL "" FORCE)
+endif()
 
 if(CREATE_TEST_TARGETS AND NOT WIN32)
 	include(gtest)

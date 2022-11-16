@@ -114,7 +114,7 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	include(FindMakedev)
 endif()
 
-option(CREATE_TEST_TARGETS "Enable make-targets for unit testing" ON)
+option(CREATE_TEST_TARGETS "Enable make-targets for unit testing" TRUE)
 
 if(CREATE_TEST_TARGETS AND NOT WIN32)
 	# Add engine only used for testing
@@ -160,16 +160,18 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	target_link_libraries(scap_event_schema driver_event_schema)
 endif()
 
-add_library(scap_engine_util
-	scap_engine_util.c
-	ringbuffer/devset.c
-	ringbuffer/ringbuffer.c)
+if (NOT EMSCRIPTEN_BUILD)
+	add_library(scap_engine_util
+		scap_engine_util.c
+		ringbuffer/devset.c
+		ringbuffer/ringbuffer.c)
 
-if(USE_BUNDLED_ZLIB AND NOT MINIMAL_BUILD)
-	add_dependencies(scap_engine_util zlib)
+	if(USE_BUNDLED_ZLIB AND NOT MINIMAL_BUILD)
+		add_dependencies(scap_engine_util zlib)
+	endif()
+
+	target_link_libraries(scap scap_engine_util)
 endif()
-
-target_link_libraries(scap scap_engine_util)
 
 add_definitions(-DHAS_ENGINE_NOOP)
 add_subdirectory(engine/noop)
@@ -184,35 +186,37 @@ add_definitions(-DHAS_ENGINE_SAVEFILE)
 add_subdirectory(engine/savefile)
 target_link_libraries(scap scap_engine_savefile)
 
-add_definitions(-DHAS_ENGINE_SOURCE_PLUGIN)
-add_subdirectory(engine/source_plugin)
-target_link_libraries(scap scap_engine_source_plugin)
+if (NOT EMSCRIPTEN_BUILD)
+	add_definitions(-DHAS_ENGINE_SOURCE_PLUGIN)
+	add_subdirectory(engine/source_plugin)
+	target_link_libraries(scap scap_engine_source_plugin)
 
-add_definitions(-DHAS_ENGINE_UDIG)
-add_subdirectory(engine/udig)
-target_link_libraries(scap scap_engine_udig)
+	add_definitions(-DHAS_ENGINE_UDIG)
+	add_subdirectory(engine/udig)
+	target_link_libraries(scap scap_engine_udig)
 
-if(CMAKE_SYSTEM_NAME MATCHES "Linux")
-	if (NOT MINIMAL_BUILD OR BUILD_LIBSCAP_MODERN_BPF)
-		include(libelf)
+	if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+		if (NOT MINIMAL_BUILD OR BUILD_LIBSCAP_MODERN_BPF)
+			include(libelf)
+		endif()
+
+		if (NOT MINIMAL_BUILD)
+			add_definitions(-DHAS_ENGINE_BPF)
+			add_subdirectory(engine/bpf)
+			target_link_libraries(scap scap_engine_bpf)
+		endif()
+
+		add_definitions(-DHAS_ENGINE_KMOD)
+		add_subdirectory(engine/kmod)
+		target_link_libraries(scap scap_engine_kmod)
+
+		if(BUILD_LIBSCAP_MODERN_BPF)
+			add_definitions(-DHAS_ENGINE_MODERN_BPF)
+			add_subdirectory(engine/modern_bpf)
+			target_link_libraries(scap scap_engine_modern_bpf)
+		endif()
+
 	endif()
-
-	if (NOT MINIMAL_BUILD)
-		add_definitions(-DHAS_ENGINE_BPF)
-		add_subdirectory(engine/bpf)
-		target_link_libraries(scap scap_engine_bpf)
-	endif()
-
-	add_definitions(-DHAS_ENGINE_KMOD)
-	add_subdirectory(engine/kmod)
-	target_link_libraries(scap scap_engine_kmod)
-
-	if(BUILD_LIBSCAP_MODERN_BPF)
-		add_definitions(-DHAS_ENGINE_MODERN_BPF)
-		add_subdirectory(engine/modern_bpf)
-		target_link_libraries(scap scap_engine_modern_bpf)
-	endif()
-
 endif()
 
 # gVisor is currently only supported on Linux x86_64
