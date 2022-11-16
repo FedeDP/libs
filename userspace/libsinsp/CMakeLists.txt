@@ -43,7 +43,7 @@ add_definitions(-DCHISEL_TOOL_LIBRARY_NAME="${CHISEL_TOOL_LIBRARY_NAME}")
 
 include(ExternalProject)
 
-if(NOT WIN32 AND NOT APPLE)
+if(NOT WIN32 AND NOT APPLE AND NOT EMSCRIPTEN_BUILD)
 	include(b64)
 endif()
 
@@ -65,8 +65,8 @@ if(NOT WIN32 AND NOT APPLE)
 		include(grpc)
 		include(protobuf)
 		include(openssl)
+		include(jq)
 	endif() # NOT MINIMAL_BUILD
-	include(jq)
 	include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 endif()
 
