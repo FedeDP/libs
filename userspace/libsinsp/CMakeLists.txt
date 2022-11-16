@@ -225,7 +225,7 @@ if(NOT WIN32)
 	if(USE_BUNDLED_CURL AND NOT MINIMAL_BUILD)
 		add_dependencies(sinsp curl)
 	endif() # USE_BUNDLED_CURL
-	if(USE_BUNDLED_TBB)
+	if(USE_BUNDLED_TBB AND NOT EMSCRIPTEN_BUILD)
 		add_dependencies(sinsp tbb)
 	endif() # USE_BUNDLED_TBB
 

@@ -15,7 +15,9 @@
 #
 
 include(jsoncpp)
-include(tbb)
+if(NOT EMSCRIPTEN_BUILD)
+	include(tbb)
+endif()
 if(NOT MINIMAL_BUILD)
 	include(curl)
 endif() # MINIMAL_BUILD
