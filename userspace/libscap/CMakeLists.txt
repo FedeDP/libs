@@ -141,7 +141,9 @@ elseif(APPLE)
 	include_directories(macos)
 endif()
 
-target_link_libraries(scap scap_platform)
+if(NOT EMSCRIPTEN_BUILD) 
+	target_link_libraries(scap scap_platform)
+endif()
 
 add_library(scap_event_schema
 	scap_event.c
@@ -187,9 +189,11 @@ if (NOT EMSCRIPTEN_BUILD)
 	target_link_libraries(scap scap_engine_nodriver)
 endif()
 
-add_definitions(-DHAS_ENGINE_SAVEFILE)
-add_subdirectory(engine/savefile)
-target_link_libraries(scap scap_engine_savefile)
+if (NOT EMSCRIPTEN_BUILD)
+	add_definitions(-DHAS_ENGINE_SAVEFILE)
+	add_subdirectory(engine/savefile)
+	target_link_libraries(scap scap_engine_savefile)
+endif()
 
 if (NOT EMSCRIPTEN_BUILD)
 	add_definitions(-DHAS_ENGINE_SOURCE_PLUGIN)

@@ -570,7 +570,7 @@ scap_t* scap_open_gvisor_int(char *error, int32_t *rc, scap_open_args *oargs)
 }
 #endif // HAS_ENGINE_GVISOR
 
-
+#ifdef HAS_ENGINE_SAVEFILE
 scap_t* scap_open_offline_int(scap_open_args* oargs, int* rc, char* error)
 {
 	scap_t* handle = NULL;
@@ -637,6 +637,7 @@ scap_t* scap_open_offline_int(scap_open_args* oargs, int* rc, char* error)
 
 	return handle;
 }
+#endif
 
 #ifdef HAS_ENGINE_NODRIVER
 scap_t* scap_open_nodriver_int(char *error, int32_t *rc,
