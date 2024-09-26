@@ -157,7 +157,9 @@ TEST_F(sys_call_test, open_close_dropping) {
 		}
 	};
 
-	ASSERT_NO_FATAL_FAILURE({ event_capture::run(test, callback, filter, setup); });
+	after_capture_t cleanup = [&](sinsp* inspector) { inspector->stop_dropping_mode(); };
+
+	ASSERT_NO_FATAL_FAILURE({ event_capture::run(test, callback, filter, setup, cleanup); });
 	EXPECT_EQ(2, callnum);
 }
 
@@ -189,7 +191,9 @@ TEST_F(sys_call_test, fcntl_getfd_dropping) {
 
 	captured_event_callback_t callback = [&](const callback_param& param) { callnum++; };
 
-	ASSERT_NO_FATAL_FAILURE({ event_capture::run(test, callback, filter, setup); });
+	after_capture_t cleanup = [&](sinsp* inspector) { inspector->stop_dropping_mode(); };
+
+	ASSERT_NO_FATAL_FAILURE({ event_capture::run(test, callback, filter, setup, cleanup); });
 	EXPECT_EQ(0, callnum);
 }
 
@@ -220,7 +224,9 @@ TEST_F(sys_call_test, bind_error_dropping) {
 
 	captured_event_callback_t callback = [&](const callback_param& param) { callnum++; };
 
-	ASSERT_NO_FATAL_FAILURE({ event_capture::run(test, callback, filter, setup); });
+	after_capture_t cleanup = [&](sinsp* inspector) { inspector->stop_dropping_mode(); };
+
+	ASSERT_NO_FATAL_FAILURE({ event_capture::run(test, callback, filter, setup, cleanup); });
 	EXPECT_EQ(1, callnum);
 }
 

@@ -938,7 +938,9 @@ TEST_F(sys_call_test, statsd_client_snaplen) {
 		n++;
 	};
 
-	ASSERT_NO_FATAL_FAILURE({ event_capture::run(test, callback, filter, setup); });
+	after_capture_t cleanup = [&](sinsp* inspector) { inspector->dynamic_snaplen(false); };
+
+	ASSERT_NO_FATAL_FAILURE({ event_capture::run(test, callback, filter, setup, cleanup); });
 	EXPECT_EQ(4, n);
 }
 

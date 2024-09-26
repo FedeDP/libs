@@ -333,7 +333,6 @@ TEST_F(sys_call_test, container_docker_bad_socket) {
 
 	event_filter_t filter = [&](sinsp_evt* evt) {
 		if(evt->get_type() == PPME_CONTAINER_JSON_E || evt->get_type() == PPME_CONTAINER_JSON_2_E) {
-			printf("top container json\n");
 			return true;
 		}
 		auto tinfo = evt->get_thread_info();
@@ -624,6 +623,7 @@ static void healthcheck_helper(
 
 	after_capture_t cleanup = [&](sinsp* inspector) {
 		capture_stats_str = capture_stats(inspector);
+		inspector->stop_dropping_mode();
 	};
 
 	ASSERT_NO_FATAL_FAILURE({ event_capture::run(test, callback, filter, setup, cleanup); });
