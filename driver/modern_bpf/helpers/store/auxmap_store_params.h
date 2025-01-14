@@ -1556,6 +1556,7 @@ static __always_inline void apply_dynamic_snaplen(struct pt_regs *regs,
 	 */
 	unsigned long args[5] = {0};
 	struct sockaddr *sockaddr = NULL;
+	const bool is_32bit = bpf_in_ia32_syscall();
 
 	switch(input_args->evt_type) {
 	case PPME_SOCKET_SENDTO_X:
@@ -1567,7 +1568,7 @@ static __always_inline void apply_dynamic_snaplen(struct pt_regs *regs,
 	case PPME_SOCKET_RECVMSG_X:
 	case PPME_SOCKET_SENDMSG_X: {
 		extract__network_args(args, 3, regs);
-		if(bpf_in_ia32_syscall()) {
+		if(is_32bit) {
 			struct compat_msghdr compat_mh = {};
 			if(likely(bpf_probe_read_user(&compat_mh,
 			                              bpf_core_type_size(struct compat_msghdr),
@@ -1587,7 +1588,7 @@ static __always_inline void apply_dynamic_snaplen(struct pt_regs *regs,
 	case PPME_SOCKET_RECVMMSG_X:
 	case PPME_SOCKET_SENDMMSG_X: {
 		extract__network_args(args, 3, regs);
-		if(bpf_in_ia32_syscall()) {
+		if(is_32bit) {
 			struct compat_mmsghdr compat_mmh = {};
 			struct compat_mmsghdr *mmh_ptr = (struct compat_mmsghdr *)args[1];
 			if(likely(bpf_probe_read_user(&compat_mmh,
